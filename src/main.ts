@@ -493,9 +493,7 @@ function renderCanvas(): void {
     const cH = el.heightIn * DISPLAY_PPI;
 
     const div = document.createElement("div");
-    div.className = `absolute border-2 transition-colors ${
-      isSel ? "border-amber-500 shadow-lg" : "border-slate-400/40 hover:border-amber-300/60"
-    }`;
+    div.className = "absolute transition-colors";
     div.style.cssText = `
       left:${(pos.x - b) * DISPLAY_PPI}px;
       top:${(pos.y - b) * DISPLAY_PPI}px;
@@ -503,7 +501,16 @@ function renderCanvas(): void {
       height:${(el.heightIn + 2 * b) * DISPLAY_PPI}px;
       background:${b > 0 ? bleed.color : "transparent"};
       cursor:${view === "front" ? "grab" : "default"};
+      outline:2px solid ${isSel ? "#f59e0b" : "rgba(148,163,184,0.4)"};
+      outline-offset:0;
+      ${isSel ? "box-shadow:0 10px 20px rgba(0,0,0,0.25);" : ""}
     `;
+    div.addEventListener("mouseenter", () => {
+      if (el.id !== selectedId) div.style.outlineColor = "rgba(252,211,77,0.6)";
+    });
+    div.addEventListener("mouseleave", () => {
+      if (el.id !== selectedId) div.style.outlineColor = "rgba(148,163,184,0.4)";
+    });
 
     // Inner div contains the card image, offset by bleed
     const contentDiv = document.createElement("div");
@@ -730,25 +737,26 @@ function autoLayout(): void {
   for (let si = 0; si < sheets.length; si++) {
     const pi = currentPageIndex + si;
     const ps = pages[pi];
+    const psSlotW = (el: PrintElement) => el.widthIn  + 2 * (el.bleedIn ?? ps.bleedIn ?? 0);
+    const psSlotH = (el: PrintElement) => el.heightIn + 2 * (el.bleedIn ?? ps.bleedIn ?? 0);
     const sAvailW = ps.widthIn  - 2 * m;
     const sAvailH = ps.heightIn - 2 * m;
     const { rows: sRows, heights: sHeights, widths: sWidths } = sheets[si];
     const totalH    = sHeights.reduce((a, b) => a + b, 0);
-    const maxW      = Math.max(...sWidths);
-    const blockStartX = m + Math.max(0, (sAvailW - maxW))   / 2;
     const startY      = m + Math.max(0, (sAvailH - totalH)) / 2;
     let y = startY;
     for (let r = 0; r < sRows.length; r++) {
       const rowEls = sRows[r];
       const rowH   = sHeights[r];
-      let x = blockStartX;
+      const rowStartX = m + Math.max(0, (sAvailW - sWidths[r])) / 2;
+      let x = rowStartX;
       for (const el of rowEls) {
         const b = el.bleedIn ?? ps.bleedIn ?? 0;
-        const sh = slotH(el);
+        const sh = psSlotH(el);
         el.x = x + b;
         el.y = y + (rowH - sh) / 2 + b;
         el.pageIndex = pi;
-        x += slotW(el);
+        x += psSlotW(el);
       }
       y += rowH;
     }
