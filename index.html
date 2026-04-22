@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Print Layout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap");
+      body { font-family: "Inter", sans-serif; background-color: #0f172a; color: #f8fafc; }
+      .val-input {
+        width: 2.75rem; background: transparent; color: white; font-weight: 700;
+        font-size: 0.75rem; text-align: right; border: none; outline: none;
+        appearance: textfield; -moz-appearance: textfield;
+      }
+      .val-input::-webkit-inner-spin-button, .val-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+      .val-input:focus { background: rgba(51,65,85,0.9); border-radius: 3px; padding: 0 3px; }
+      #canvas-area.drop-over { outline: 3px dashed #f59e0b; outline-offset: -6px; background: rgba(245,158,11,0.04); }
+      #loading {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,0.92);
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body class="h-screen overflow-hidden">
+
+    <!-- ── Import Size Dialog ──────────────────────────────────────────── -->
+    <div id="import-size-dialog" style="display:none"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
+      <div class="bg-slate-800 border border-slate-600 rounded-2xl shadow-2xl p-6 w-80 space-y-4">
+        <h2 class="text-sm font-black uppercase tracking-widest text-amber-500">Import Size</h2>
+
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input type="radio" name="import-size-mode" id="isd-actual" value="actual" checked
+            class="accent-amber-500 w-4 h-4 cursor-pointer" />
+          <div>
+            <div class="text-xs font-black text-white">Actual Size</div>
+            <div class="text-[10px] text-slate-400">Auto-fit image to page (preserving aspect ratio)</div>
+          </div>
+        </label>
+
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input type="radio" name="import-size-mode" id="isd-fixed" value="fixed"
+            class="accent-amber-500 w-4 h-4 cursor-pointer" />
+          <div>
+            <div class="text-xs font-black text-white">Fixed Size</div>
+            <div class="text-[10px] text-slate-400">Import at specific dimensions in inches</div>
+          </div>
+        </label>
+
+        <div id="isd-fixed-fields" class="flex gap-2 pl-7" style="opacity:0.4;pointer-events:none">
+          <label class="text-xs text-slate-400 flex items-center gap-1 flex-1">
+            W
+            <input id="isd-w" type="number" min="0.25" max="24" step="0.25" value="2.5"
+              class="flex-1 min-w-0 bg-slate-700 border border-slate-600 rounded px-1.5 py-1 text-xs text-white outline-none focus:border-amber-500" />"
+          </label>
+          <label class="text-xs text-slate-400 flex items-center gap-1 flex-1">
+            H
+            <input id="isd-h" type="number" min="0.25" max="24" step="0.25" value="3.5"
+              class="flex-1 min-w-0 bg-slate-700 border border-slate-600 rounded px-1.5 py-1 text-xs text-white outline-none focus:border-amber-500" />"
+          </label>
+        </div>
+
+        <div class="flex gap-2 pt-1">
+          <button id="isd-cancel"
+            class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-xl text-xs font-black uppercase text-slate-300 transition-all">
+            Cancel
+          </button>
+          <button id="isd-ok"
+            class="flex-1 py-2 bg-amber-500 hover:bg-amber-400 rounded-xl text-xs font-black uppercase text-slate-900 transition-all shadow">
+            Import
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="loading">
+      <div class="animate-spin rounded-full h-14 w-14 border-t-4 border-amber-500 mb-4"></div>
+      <p class="font-black text-amber-500 uppercase tracking-widest text-sm">Generating PDF…</p>
+    </div>
+
+    <div class="flex h-screen overflow-hidden">
+
+      <!-- ── Sidebar ──────────────────────────────────────────────── -->
+      <aside class="w-72 shrink-0 bg-slate-900 border-r border-slate-700 flex flex-col overflow-hidden">
+
+        <!-- Tab bar -->
+        <div class="flex border-b border-slate-700 shrink-0">
+          <button id="tab-btn-settings"
+            class="flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors">
+            Settings
+          </button>
+          <button id="tab-btn-elements"
+            class="flex-1 py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors">
+            Elements
+          </button>
+        </div>
+
+        <!-- ── Settings tab ── -->
+        <div id="tab-settings" class="flex-1 overflow-y-auto p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h1 class="text-xl font-black text-amber-500 uppercase tracking-tight">Print Layout</h1>
+            <button id="btn-reset" class="text-[10px] text-slate-500 hover:text-red-400 font-black uppercase tracking-widest transition-colors">Reset</button>
+          </div>
+
+          <div>
+            <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest block mb-1">Page Size</label>
+            <select id="sel-preset" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+              <option value="letter">Letter (8.5 × 11")</option>
+              <option value="a4">A4 (8.27 × 11.69")</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+
+          <div class="flex gap-2">
+            <label class="text-xs text-slate-400 flex items-center gap-1 flex-1">
+              W
+              <input id="inp-w" type="number" min="1" max="24" step="0.25" value="8.5"
+                class="flex-1 min-w-0 bg-slate-700 border border-slate-600 rounded px-1.5 py-1 text-xs text-white outline-none focus:border-amber-500" />"
+            </label>
+            <label class="text-xs text-slate-400 flex items-center gap-1 flex-1">
+              H
+              <input id="inp-h" type="number" min="1" max="24" step="0.25" value="11"
+                class="flex-1 min-w-0 bg-slate-700 border border-slate-600 rounded px-1.5 py-1 text-xs text-white outline-none focus:border-amber-500" />"
+            </label>
+          </div>
+
+          <div>
+            <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest block mb-1">Duplex Flip Axis</label>
+            <select id="sel-flip" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+              <option value="long">Long Edge (standard portrait)</option>
+              <option value="short">Short Edge (flip up / landscape)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest block mb-1">Back Alignment</label>
+            <div class="flex gap-2">
+              <label class="text-xs text-slate-400 flex items-center gap-1 flex-1">
+                X
+                <input id="inp-back-offset-x" type="number" min="-1" max="1" step="0.01" value="0"
+                  class="flex-1 min-w-0 bg-slate-700 border border-slate-600 rounded px-1.5 py-1 text-xs text-white outline-none focus:border-amber-500" />
+              </label>
+              <label class="text-xs text-slate-400 flex items-center gap-1 flex-1">
+                Y
+                <input id="inp-back-offset-y" type="number" min="-1" max="1" step="0.01" value="0"
+                  class="flex-1 min-w-0 bg-slate-700 border border-slate-600 rounded px-1.5 py-1 text-xs text-white outline-none focus:border-amber-500" />
+              </label>
+            </div>
+            <div class="text-[10px] text-slate-500 mt-1">Inches. Positive X moves the back right; positive Y moves it down.</div>
+          </div>
+
+          <div>
+            <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest block mb-1">Bleed</label>
+            <div id="border-context-label" class="text-[10px] text-slate-500 -mt-1 mb-1">Sheet defaults</div>
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400 flex items-center gap-1">
+                W
+                <input id="inp-sheet-border-w" type="number" min="0" max="0.5" step="0.005" value="0"
+                  class="w-full min-w-0 bg-slate-700 border border-slate-600 rounded px-1.5 py-1 text-xs text-white outline-none focus:border-amber-500" />
+              </label>
+              <div class="flex items-center gap-1 flex-wrap">
+                <span class="text-[10px] text-slate-500 uppercase">F</span>
+                <input id="inp-sheet-border-color" type="color" value="#000000"
+                  class="h-8 w-10 rounded border border-slate-600 bg-slate-700" title="Front bleed color" />
+                <div class="flex gap-0.5">
+                  <button id="btn-sheet-border-sample-front-top" class="px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase" title="Sample front top edge for all elements">T</button>
+                  <button id="btn-sheet-border-sample-front-bottom" class="px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase" title="Sample front bottom edge for all elements">B</button>
+                  <button id="btn-sheet-border-sample-front-left" class="px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase" title="Sample front left edge for all elements">L</button>
+                  <button id="btn-sheet-border-sample-front-right" class="px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase" title="Sample front right edge for all elements">R</button>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 flex-wrap">
+                <span class="text-[10px] text-slate-500 uppercase">B</span>
+                <input id="inp-sheet-back-border-color" type="color" value="#000000"
+                  class="h-8 w-10 rounded border border-slate-600 bg-slate-700" title="Back bleed color" />
+                <div class="flex gap-0.5">
+                  <button id="btn-sheet-border-sample-back-top" class="px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase" title="Sample back top edge for all elements">T</button>
+                  <button id="btn-sheet-border-sample-back-bottom" class="px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase" title="Sample back bottom edge for all elements">B</button>
+                  <button id="btn-sheet-border-sample-back-left" class="px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase" title="Sample back left edge for all elements">L</button>
+                  <button id="btn-sheet-border-sample-back-right" class="px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase" title="Sample back right edge for all elements">R</button>
+                </div>
+              </div>
+            </div>
+            <button id="btn-sheet-border-reset-overrides"
+              class="w-full mt-2 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-[10px] font-black uppercase text-slate-400 transition-all">
+              Reset Bleed Overrides
+            </button>
+            <div class="text-[10px] text-slate-500 mt-1">With no selection this edits sheet defaults. When an element is selected, it edits that element’s overrides.</div>
+          </div>
+
+          <div>
+            <label class="text-[10px] text-slate-400 uppercase font-black tracking-widest block mb-1">Back (this sheet)</label>
+            <div class="flex items-center gap-2">
+              <button id="btn-global-back"
+                class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-amber-500 rounded-lg text-xs font-black uppercase text-slate-300 transition-all truncate">
+                Set Back Image…
+              </button>
+              <button id="btn-clear-global-back" style="display:none"
+                class="shrink-0 px-2 py-1.5 bg-slate-700 hover:bg-red-900 border border-slate-600 hover:border-red-500 rounded-lg text-xs font-black text-slate-400 hover:text-red-400 transition-all">
+                ×
+              </button>
+            </div>
+            <div id="global-back-preview" style="display:none" class="mt-1">
+              <img id="global-back-img" src="" class="w-full h-16 object-cover rounded border border-slate-600" />
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest">Print Adjustments</div>
+              <div id="adj-side-label" class="text-[10px] font-black uppercase tracking-widest text-amber-500">Front</div>
+            </div>
+            <div id="adj-context-label" class="text-[10px] text-slate-500 truncate -mt-1">Sheet</div>
+            <label class="flex items-center justify-between text-xs text-slate-400">
+              Black Point <span class="flex items-center gap-px"><input type="number" id="blackpoint-val" min="0" max="50" step="1" value="0" class="val-input" />%</span>
+            </label>
+            <input id="inp-blackpoint" type="range" min="0" max="50" value="0" class="w-full accent-amber-500 cursor-pointer" />
+            <label class="flex items-center justify-between text-xs text-slate-400">
+              White Point <span class="flex items-center gap-px"><input type="number" id="whitepoint-val" min="50" max="100" step="1" value="100" class="val-input" />%</span>
+            </label>
+            <input id="inp-whitepoint" type="range" min="50" max="100" value="100" class="w-full accent-amber-500 cursor-pointer" />
+            <label class="flex items-center justify-between text-xs text-slate-400">
+              Brightness <span class="flex items-center gap-px"><input type="number" id="brightness-val" min="50" max="150" step="1" value="100" class="val-input" />%</span>
+            </label>
+            <input id="inp-brightness" type="range" min="50" max="150" value="100" class="w-full accent-amber-500 cursor-pointer" />
+            <label class="flex items-center justify-between text-xs text-slate-400">
+              Saturation <span class="flex items-center gap-px"><input type="number" id="saturation-val" min="0" max="200" step="1" value="100" class="val-input" />%</span>
+            </label>
+            <input id="inp-saturation" type="range" min="0" max="200" value="100" class="w-full accent-amber-500 cursor-pointer" />
+            <label class="flex items-center justify-between text-xs text-slate-400">
+              Contrast <span class="flex items-center gap-px"><input type="number" id="contrast-val" min="50" max="150" step="1" value="100" class="val-input" />%</span>
+            </label>
+            <input id="inp-contrast" type="range" min="50" max="150" value="100" class="w-full accent-amber-500 cursor-pointer" />
+            <button id="btn-reset-adjustments" class="w-full py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-[10px] font-black uppercase text-slate-400 transition-all">
+              Reset
+            </button>
+          </div>
+
+          <div class="flex gap-2">
+            <button id="btn-save-project"
+              class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-amber-500 rounded-xl text-xs font-black uppercase text-slate-300 transition-all">
+              💾 Save Project
+            </button>
+            <button id="btn-load-project"
+              class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-amber-500 rounded-xl text-xs font-black uppercase text-slate-300 transition-all">
+              📂 Load Project
+            </button>
+          </div>
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" id="chk-embed-images" checked class="accent-amber-500 cursor-pointer" />
+            <span class="text-[10px] text-slate-400 uppercase font-black tracking-widest">Embed images in save</span>
+          </label>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest">Fonts</div>
+              <button id="btn-import-fonts"
+                class="px-2 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-amber-500 rounded-lg text-[10px] font-black uppercase text-slate-300 transition-all">
+                Import Fonts
+              </button>
+            </div>
+            <div id="font-list" class="space-y-1"></div>
+            <div class="text-[10px] text-slate-500">Import `.ttf`, `.otf`, `.woff`, or `.woff2` files for consistent SVG text rendering.</div>
+          </div>
+          <div class="flex gap-2">
+            <button id="btn-export"
+              class="flex-1 py-2 bg-amber-500 hover:bg-amber-400 rounded-xl text-xs font-black uppercase text-slate-900 transition-all shadow">
+              ⬇ Export PDF
+            </button>
+            <button id="btn-auto-layout" title="Auto-arrange elements with safe margins"
+              class="px-3 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-amber-500 rounded-xl text-xs font-black uppercase text-slate-300 transition-all">
+              ⊞
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Elements tab ── -->
+        <div id="tab-elements" class="flex-1 flex-col overflow-hidden" style="display:none">
+          <div class="p-3 border-b border-slate-700 shrink-0">
+            <button id="btn-reconnect" style="display:none"
+              class="w-full mb-2 py-2 bg-blue-600 hover:bg-blue-500 border border-blue-500 rounded-xl text-xs font-black uppercase text-white transition-all">
+              🔗 Reconnect Files
+            </button>
+            <div class="flex gap-2">
+              <button id="btn-import"
+                class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-amber-500 rounded-xl text-xs font-black uppercase text-slate-300 transition-all">
+                ⬇ Import…
+              </button>
+              <button id="btn-add"
+                class="px-3 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-amber-500 rounded-xl text-xs font-black uppercase text-slate-300 transition-all"
+                title="Add empty element">
+                + Empty
+              </button>
+            </div>
+          </div>
+          <div class="flex-1 overflow-y-auto p-3">
+            <div id="element-list"></div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- ── Canvas area ──────────────────────────────────────────── -->
+      <main class="flex-1 flex flex-col overflow-hidden bg-slate-800">
+
+        <!-- View toggle bar -->
+        <div class="px-4 py-2.5 border-b border-slate-700 bg-slate-900/60 flex items-center gap-3">
+          <button id="btn-front" class="px-4 py-1.5 rounded-lg text-xs font-black uppercase transition-all">Front</button>
+          <button id="btn-back"  class="px-4 py-1.5 rounded-lg text-xs font-black uppercase transition-all">Back</button>
+          <div class="w-px h-4 bg-slate-600 mx-1 shrink-0"></div>
+          <div id="page-tabs" class="flex items-center gap-1 flex-1 overflow-x-auto"></div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button id="btn-zoom-out" class="w-6 h-6 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded text-sm text-slate-300 font-black leading-none">−</button>
+            <input type="number" id="zoom-val" min="25" max="400" step="5" value="100"
+              class="val-input w-12 text-center text-slate-300" style="text-align:center" />
+            <span class="text-[11px] text-slate-500">%</span>
+            <button id="btn-zoom-in"  class="w-6 h-6 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded text-sm text-slate-300 font-black leading-none">+</button>
+          </div>
+        </div>
+
+        <!-- Scrollable canvas -->
+        <div id="canvas-area" class="flex-1 overflow-auto p-8 flex items-start justify-center">
+          <div id="page-canvas"
+            class="relative bg-white shadow-2xl shrink-0"
+            style="width:612px;height:792px;">
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
