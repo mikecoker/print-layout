@@ -1,6 +1,8 @@
 # Print Layout
 
-Print Layout is a standalone desktop app for laying out printable cards and similar front/back assets on physical sheets.
+**Web app:** https://mikecoker.github.io/print-layout/
+
+Print Layout is a tool for laying out printable cards and similar front/back assets on physical sheets. It runs as a web app and as a standalone desktop app.
 
 The desktop version keeps imported assets available across app restarts, supports project save/load, and exports print-ready PDFs.
 
