@@ -255,42 +255,47 @@ function renderSidebar(): void {
         <button class="el-rot-r flex-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-sm text-slate-300 font-black transition-all" data-id="${el.id}" title="Rotate right 90°">↻</button>
         ${el.frontSrc ? `<button class="el-fit flex-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase tracking-wide transition-all" data-id="${el.id}" title="Fit element size to image aspect ratio">⊡ Fit</button>` : ""}
       </div>
-      <div class="flex gap-2 mt-2 items-center">
-        <label class="text-xs text-slate-400 flex items-center gap-1 flex-1">
-          Bleed
-          <input class="el-border-w w-full bg-slate-700 rounded px-1 py-0.5 text-xs text-white outline-none focus:ring-1 ring-amber-500"
-            type="number" min="0" max="0.5" step="0.005" value="${el.bleedIn ?? 0}" data-id="${el.id}" />
-        </label>
-          <div class="flex items-center gap-1">
+      <div class="grid grid-cols-2 gap-2 mt-2">
+        <div class="space-y-1 min-w-0">
+          <label class="text-xs text-slate-400 flex items-center gap-1">
+            Bleed
+            <input class="el-border-w w-full min-w-0 bg-slate-700 rounded px-1 py-0.5 text-xs text-white outline-none focus:ring-1 ring-amber-500"
+              type="number" min="0" max="0.5" step="0.005" value="${el.bleedIn ?? 0}" data-id="${el.id}" />
+          </label>
+          <div class="flex items-center gap-1 min-w-0">
             <span class="text-[10px] text-slate-500 uppercase">F</span>
             <input class="el-border-color h-7 w-10 rounded border border-slate-600 bg-slate-700" type="color"
               value="${el.borderColor ?? page.borderColor ?? "#000000"}" data-id="${el.id}" data-side="front" title="Front border color" />
-            <div class="flex gap-0.5">
-              <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
-                data-id="${el.id}" data-side="front" data-edge="top" title="Sample front top edge">T</button>
-              <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
-                data-id="${el.id}" data-side="front" data-edge="bottom" title="Sample front bottom edge">B</button>
-              <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
-                data-id="${el.id}" data-side="front" data-edge="left" title="Sample front left edge">L</button>
-              <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
-                data-id="${el.id}" data-side="front" data-edge="right" title="Sample front right edge">R</button>
-            </div>
           </div>
-          <div class="flex items-center gap-1">
+          <div class="grid grid-cols-4 gap-0.5">
+            <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
+              data-id="${el.id}" data-side="front" data-edge="top" title="Sample front top edge">T</button>
+            <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
+              data-id="${el.id}" data-side="front" data-edge="bottom" title="Sample front bottom edge">B</button>
+            <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
+              data-id="${el.id}" data-side="front" data-edge="left" title="Sample front left edge">L</button>
+            <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
+              data-id="${el.id}" data-side="front" data-edge="right" title="Sample front right edge">R</button>
+          </div>
+        </div>
+        <div class="space-y-1 min-w-0">
+          <div class="text-xs text-slate-400">&nbsp;</div>
+          <div class="flex items-center gap-1 min-w-0">
             <span class="text-[10px] text-slate-500 uppercase">B</span>
             <input class="el-border-color h-7 w-10 rounded border border-slate-600 bg-slate-700" type="color"
               value="${el.backBorderColor ?? el.borderColor ?? page.backBorderColor ?? page.borderColor ?? "#000000"}" data-id="${el.id}" data-side="back" title="Back border color" />
-            <div class="flex gap-0.5">
-              <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
-                data-id="${el.id}" data-side="back" data-edge="top" title="Sample back top edge">T</button>
-              <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
-                data-id="${el.id}" data-side="back" data-edge="bottom" title="Sample back bottom edge">B</button>
-              <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
-                data-id="${el.id}" data-side="back" data-edge="left" title="Sample back left edge">L</button>
-              <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
-                data-id="${el.id}" data-side="back" data-edge="right" title="Sample back right edge">R</button>
-            </div>
           </div>
+          <div class="grid grid-cols-4 gap-0.5">
+            <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
+              data-id="${el.id}" data-side="back" data-edge="top" title="Sample back top edge">T</button>
+            <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
+              data-id="${el.id}" data-side="back" data-edge="bottom" title="Sample back bottom edge">B</button>
+            <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
+              data-id="${el.id}" data-side="back" data-edge="left" title="Sample back left edge">L</button>
+            <button class="el-border-sample px-1 py-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded text-[10px] text-slate-300 font-black uppercase"
+              data-id="${el.id}" data-side="back" data-edge="right" title="Sample back right edge">R</button>
+          </div>
+        </div>
       </div>
     `;
     div.addEventListener("click", () => { selectedId = el.id; render(); loadAdjustmentUI(); });
