@@ -749,12 +749,13 @@ function autoLayout(): void {
     const { rows: sRows, heights: sHeights, widths: sWidths } = sheets[si];
     const totalH    = sHeights.reduce((a, b) => a + b, 0);
     const startY      = m + Math.max(0, (sAvailH - totalH)) / 2;
+    const maxRowWidth = Math.max(...sWidths);
+    const sharedStartX = m + Math.max(0, (sAvailW - maxRowWidth)) / 2;
     let y = startY;
     for (let r = 0; r < sRows.length; r++) {
       const rowEls = sRows[r];
       const rowH   = sHeights[r];
-      const rowStartX = m + Math.max(0, (sAvailW - sWidths[r])) / 2;
-      let x = rowStartX;
+      let x = sharedStartX;
       for (const el of rowEls) {
         const b = el.bleedIn ?? ps.bleedIn ?? 0;
         const sh = psSlotH(el);
