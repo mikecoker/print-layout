@@ -52,8 +52,8 @@ jobs:
         if: matrix.platform.os == 'macos-latest'
         run: |
           mkdir -p release-artifacts
-          APP_PATH="src-tauri/target/release/bundle/macos/Aegis Print Layout.app"
-          ZIP_PATH="release-artifacts/Aegis-Print-Layout-macos.zip"
+          APP_PATH="src-tauri/target/release/bundle/macos/Print Layout.app"
+          ZIP_PATH="release-artifacts/Print-Layout-macos.zip"
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_PATH"
           find "src-tauri/target/release/bundle/dmg" -maxdepth 1 -name "*.dmg" -exec cp {} release-artifacts/ \;
 
@@ -62,9 +62,9 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path release-artifacts | Out-Null
-          $exePath = "src-tauri/target/release/aegis-print-layout.exe"
+          $exePath = "src-tauri/target/release/print-layout.exe"
           if (Test-Path $exePath) {
-            Compress-Archive -Path $exePath -DestinationPath "release-artifacts/Aegis-Print-Layout-windows.zip" -Force
+            Compress-Archive -Path $exePath -DestinationPath "release-artifacts/Print-Layout-windows.zip" -Force
           }
           Get-ChildItem "src-tauri/target/release/bundle" -Recurse -Include *.msi,*.exe | ForEach-Object {
             Copy-Item $_.FullName -Destination "release-artifacts" -Force
