@@ -1,0 +1,11 @@
+*.afpub~lock~
+*.afdesign~lock~
+.DS_Store
+node_modules/
+dist/
+*/.wrangler/
+.vite/
+data/
+.superpowers/
+.venv/
+.vscode/
